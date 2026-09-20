@@ -1,7 +1,7 @@
-
 import './style.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import WebGL from 'three/addons/capabilities/WebGL.js';
 
 // --------------------------------------------------
 // Configuration
@@ -17,7 +17,7 @@ const CONFIG = {
     fov: 55,
     near: 0.1,
     far: 100,
-    position: [ 0, 0.15, 3.4 ],
+    position: [0, 0.15, 3.4],
   },
 
   controls: {
@@ -65,6 +65,9 @@ const CONFIG = {
     particlesRotation: 0.018,
     cyanLightSpeed: 0.6,
     magentaLightSpeed: 0.45,
+    // Timestamp used to compose the single frame shown when the visitor asks
+    // for reduced motion: far enough in for the lights to be off-axis.
+    staticPose: 2.4,
   },
 };
 
@@ -143,7 +146,10 @@ function createControls(camera, renderer) {
 // --------------------------------------------------
 
 function createMainObject() {
-  const geometry = new THREE.IcosahedronGeometry(CONFIG.mainObject.radius, CONFIG.mainObject.detail);
+  const geometry = new THREE.IcosahedronGeometry(
+    CONFIG.mainObject.radius,
+    CONFIG.mainObject.detail,
+  );
   const material = new THREE.MeshStandardMaterial({
     color: CONFIG.colors.core,
     roughness: CONFIG.mainObject.roughness,
@@ -172,6 +178,7 @@ function createWireframe(geometry) {
     wireframe: true,
     transparent: true,
     opacity: 0.22,
+    depthWrite: false,
   });
 
   const wireframe = new THREE.Mesh(geometry, material);
@@ -192,6 +199,10 @@ function createGlow() {
     color: CONFIG.colors.cyan,
     transparent: true,
     opacity: 0.08,
+    // Both glow shells live inside the transparent core. Writing depth would
+    // let whichever is drawn first hide the other, and the sort order between
+    // objects sharing a centre is not something to rely on.
+    depthWrite: false,
   });
 
   return new THREE.Mesh(geometry, material);
@@ -204,6 +215,7 @@ function createInnerGlow() {
     color: CONFIG.colors.magenta,
     transparent: true,
     opacity: 0.035,
+    depthWrite: false,
   });
 
   return new THREE.Mesh(geometry, material);
@@ -222,7 +234,11 @@ function createEnergyRing({
   scale = 1,
 }) {
   const geometry = new THREE.TorusGeometry(radius, tube, 8, 128);
-  const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity });
+  const material = new THREE.MeshBasicMaterial({
+    color,
+    transparent: true,
+    opacity,
+  });
   const ring = new THREE.Mesh(geometry, material);
 
   ring.rotation.set(...rotation);
@@ -237,7 +253,7 @@ function createEnergyRings() {
     opacity: 0.48,
     radius: 1.35,
     tube: 0.009,
-    rotation: [ Math.PI / 2.5, 0, 0 ],
+    rotation: [Math.PI / 2.5, 0, 0],
   });
 
   return { ring };
@@ -287,7 +303,11 @@ function createParticlePositions() {
 // --------------------------------------------------
 
 function createLights(scene) {
-  const hemisphereLight = new THREE.HemisphereLight(CONFIG.colors.hemisphereSky, CONFIG.colors.hemisphereGround, 1.5);
+  const hemisphereLight = new THREE.HemisphereLight(
+    CONFIG.colors.hemisphereSky,
+    CONFIG.colors.hemisphereGround,
+    1.5,
+  );
   const keyLight = new THREE.DirectionalLight(0xffffff, 2.5);
 
   keyLight.position.set(3, 4, 5);
@@ -339,7 +359,10 @@ function animateMainObject(mainObject, elapsed) {
   wireframe.rotation.x = elapsed * CONFIG.animation.wireframeRotationX;
   wireframe.rotation.y = elapsed * CONFIG.animation.wireframeRotationY;
 
-  const breathing = 1 + Math.sin(elapsed * CONFIG.animation.breathingSpeed) * CONFIG.animation.breathingAmount;
+  const breathing =
+    1 +
+    Math.sin(elapsed * CONFIG.animation.breathingSpeed) *
+      CONFIG.animation.breathingAmount;
 
   mesh.scale.setScalar(breathing);
 
@@ -391,49 +414,69 @@ function handleResize(renderer, camera) {
 // Application
 // --------------------------------------------------
 
-const renderer = createRenderer();
-const scene = createScene();
-const camera = createCamera();
-const controls = createControls(camera, renderer);
-const mainObject = createMainObject();
-const rings = createEnergyRings();
-const particles = createParticles();
-const lights = createLights(scene);
+function showUnsupportedMessage() {
+  const fallback = document.getElementById('fallback');
 
-createGround(scene);
-
-scene.add(mainObject.mesh, rings.ring, particles);
-
-// --------------------------------------------------
-// Animation loop
-// --------------------------------------------------
-
-const timer = new THREE.Timer();
-
-timer.connect(document);
-
-function animate() {
-  timer.update();
-
-  const elapsed = timer.getElapsed();
-
-  animateMainObject(mainObject, elapsed);
-  animateRings(rings, elapsed);
-  animateParticles(particles, elapsed);
-  animateLights(lights, elapsed);
-
-  controls.update();
-
-  renderer.render(scene, camera);
+  if (fallback) fallback.hidden = false;
 }
 
-renderer.setAnimationLoop(animate);
+function prefersReducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 
-// --------------------------------------------------
-// Events
-// --------------------------------------------------
+function init() {
+  // The WebGLRenderer constructor throws when no context can be created, so
+  // the capability check has to come before anything else is built.
+  if (!WebGL.isWebGL2Available()) {
+    showUnsupportedMessage();
 
-window.addEventListener(
-  'resize',
-  () => handleResize(renderer, camera)
-);
+    return;
+  }
+
+  const renderer = createRenderer();
+  const scene = createScene();
+  const camera = createCamera();
+  const controls = createControls(camera, renderer);
+  const mainObject = createMainObject();
+  const rings = createEnergyRings();
+  const particles = createParticles();
+  const lights = createLights(scene);
+
+  createGround(scene);
+
+  scene.add(mainObject.mesh, rings.ring, particles);
+
+  window.addEventListener('resize', () => handleResize(renderer, camera));
+
+  function renderFrame(elapsed) {
+    animateMainObject(mainObject, elapsed);
+    animateRings(rings, elapsed);
+    animateParticles(particles, elapsed);
+    animateLights(lights, elapsed);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  if (prefersReducedMotion()) {
+    // This scene is nothing but motion, so honouring the preference means not
+    // running the loop at all. One composed frame is drawn, and redrawn only
+    // when the visitor drags the camera, so the object stays explorable.
+    renderFrame(CONFIG.animation.staticPose);
+    controls.addEventListener('change', () => renderer.render(scene, camera));
+
+    return;
+  }
+
+  const timer = new THREE.Timer();
+
+  // Connecting the timer to the document lets it discard the gap accumulated
+  // while the tab was hidden, instead of jumping the animation on return.
+  timer.connect(document);
+
+  renderer.setAnimationLoop(() => {
+    timer.update();
+    renderFrame(timer.getElapsed());
+  });
+}
+
+init();

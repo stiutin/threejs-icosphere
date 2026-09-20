@@ -3,3 +3,50 @@
   margin: 0;
   padding: 0;
 }
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  /* Matches the scene background so there is no white flash before the first
+     frame, and no pale gutter if the canvas is ever smaller than the page. */
+  background: #05030d;
+  color: #e9e4ff;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  overflow: hidden;
+}
+
+canvas {
+  /* A canvas is inline by default, so it sits on a text baseline and leaves a
+     few pixels below it: enough to push the page over 100% and show a
+     scrollbar. */
+  display: block;
+}
+
+.fallback {
+  align-items: center;
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 24px;
+  position: fixed;
+}
+
+.fallback[hidden] {
+  display: none;
+}
+
+.fallback__text {
+  color: rgba(233, 228, 255, 0.72);
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 36ch;
+  text-align: center;
+}
