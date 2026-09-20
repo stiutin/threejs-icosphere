@@ -50,3 +50,71 @@ canvas {
   max-width: 36ch;
   text-align: center;
 }
+
+.panel {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(10, 6, 24, 0.72);
+  border: 1px solid rgba(185, 167, 255, 0.16);
+  border-radius: 14px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  left: 24px;
+  padding: 18px 20px;
+  position: fixed;
+  width: 232px;
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.panel__title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.panel__label {
+  color: rgba(233, 228, 255, 0.55);
+  font-size: 12px;
+}
+
+.panel__row {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.panel__slider {
+  accent-color: #00d9ff;
+  flex: 1;
+  min-width: 0;
+}
+
+.panel__level {
+  color: #00d9ff;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  min-width: 1ch;
+  text-align: right;
+}
+
+.panel__faces {
+  color: rgba(233, 228, 255, 0.55);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .panel {
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+}

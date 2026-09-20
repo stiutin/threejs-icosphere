@@ -2,12 +2,14 @@
 
 An animated icosphere built with Three.js and vanilla JavaScript.
 
-A flat-shaded icosahedron sits inside a counter-rotating wireframe shell, lit by a fixed key light and two coloured point lights that orbit it. A field of 900 particles surrounds the object, and the whole thing can be turned and zoomed with the mouse. There is no UI: the scene is the piece.
+A flat-shaded icosahedron sits inside a counter-rotating wireframe shell, lit by a fixed key light and two coloured point lights that orbit it. A field of 900 particles surrounds the object, and the whole thing can be turned and zoomed with the mouse. A slider rebuilds the geometry live from 20 triangles up to 720, which is the part worth playing with: it is the subdivision that turns twenty flat faces into something that reads as a sphere.
 
 **[Open the live demo](https://stiutin.github.io/threejs-icosphere/)**
 
 ## Features
 
+- Live subdivision control, rebuilding the geometry from level 0 to 5
+- Triangle counter read back from the geometry itself
 - Flat-shaded `IcosahedronGeometry` core with a standard PBR material
 - Wireframe shell sharing the core's geometry, rotating on its own axes
 - Two nested glow shells whose opacity pulses out of phase
@@ -17,6 +19,7 @@ A flat-shaded icosahedron sits inside a counter-rotating wireframe shell, lit by
 - Subtle breathing scale on the core
 - ACES filmic tone mapping with sRGB output
 - Orbit controls with damping, clamped zoom and panning disabled
+- Keyboard-operable slider with a live region announcing the new count
 - Device pixel ratio capped at 2
 - Static single frame when the visitor prefers reduced motion
 - Explicit message when WebGL 2 is unavailable
@@ -42,6 +45,20 @@ Mesh (icosahedron core, flat-shaded, slightly transparent)
 ```
 
 The wireframe reuses the core's geometry object rather than building a second one, so the two are guaranteed to stay in step and only one set of vertex buffers is uploaded to the GPU.
+
+### Subdivision
+
+The slider rebuilds `IcosahedronGeometry` on every change. The core and the wireframe shell point at the same geometry object, so both are repointed before the previous one is disposed. That `dispose()` call matters more than it looks: dropping the JavaScript reference does not free the vertex buffers, which live in GPU memory until they are explicitly released, and this path runs on every step of a slider drag.
+
+The triangle count is read from `geometry.attributes.position.count / 3` rather than computed. Three.js subdivides each edge of the base icosahedron into `detail + 1` segments, which gives **20 × (detail+1)²** faces, not the 20 × 4^detail that recursive subdivision would produce:
+
+| Level | 0   | 1   | 2   | 3   | 4   | 5   |
+| ----- | --- | --- | --- | --- | --- | --- |
+| Faces | 20  | 80  | 180 | 320 | 500 | 720 |
+
+The division by three is exact because the geometry is non-indexed: vertices are not shared between faces, which is precisely what allows `flatShading` to give every triangle its own normal and produce the faceted look.
+
+The wireframe's opacity falls off as the level rises. At level 5 a constant opacity turns the shell into a solid skin that hides the surface it is meant to describe.
 
 ### Transparency
 
@@ -98,12 +115,11 @@ Pushing to `master` runs formatting and lint checks first; only if those pass do
 
 ## Roadmap
 
-- [ ] Subdivision control, to show the icosphere at detail levels 0 to 5
 - [ ] Bloom via `EffectComposer`, which this palette is asking for
 - [ ] Mouse parallax on the camera
 - [ ] Custom GLSL material for the facets
 - [ ] Particle motion beyond the rigid rotation of the whole field
-- [ ] Resource disposal, for embedding the scene in a larger app
+- [ ] Full resource disposal, for embedding the scene in a larger app (geometry is already released on rebuild; materials and textures are not)
 
 ## License
 
