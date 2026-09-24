@@ -1,7 +1,8 @@
 import './style.css';
+
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import WebGL from 'three/addons/capabilities/WebGL.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
 // --------------------------------------------------
 // Configuration
@@ -78,7 +79,7 @@ const CONFIG = {
 // --------------------------------------------------
 
 function createRenderer() {
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  const renderer = new THREE.WebGLRenderer({antialias: true});
 
   renderer.setPixelRatio(getPixelRatio());
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -115,7 +116,7 @@ function createCamera() {
     CONFIG.camera.fov,
     getAspectRatio(),
     CONFIG.camera.near,
-    CONFIG.camera.far,
+    CONFIG.camera.far
   );
 
   camera.position.set(...CONFIG.camera.position);
@@ -148,10 +149,7 @@ function createControls(camera, renderer) {
 // --------------------------------------------------
 
 function createMainObject() {
-  const geometry = new THREE.IcosahedronGeometry(
-    CONFIG.mainObject.radius,
-    CONFIG.mainObject.detail,
-  );
+  const geometry = new THREE.IcosahedronGeometry(CONFIG.mainObject.radius, CONFIG.mainObject.detail);
   const material = new THREE.MeshStandardMaterial({
     color: CONFIG.colors.core,
     roughness: CONFIG.mainObject.roughness,
@@ -167,7 +165,7 @@ function createMainObject() {
 
   mesh.add(wireframe, glow, innerGlow);
 
-  return { mesh, wireframe, glow, innerGlow };
+  return {mesh, wireframe, glow, innerGlow};
 }
 
 // --------------------------------------------------
@@ -175,20 +173,16 @@ function createMainObject() {
 // --------------------------------------------------
 
 function setDetail(mainObject, detail) {
-  const { mesh, wireframe } = mainObject;
+  const {mesh, wireframe} = mainObject;
   const previous = mesh.geometry;
-  const geometry = new THREE.IcosahedronGeometry(
-    CONFIG.mainObject.radius,
-    detail,
-  );
+  const geometry = new THREE.IcosahedronGeometry(CONFIG.mainObject.radius, detail);
 
   mesh.geometry = geometry;
   wireframe.geometry = geometry;
   previous.dispose();
 
   wireframe.material.opacity =
-    CONFIG.mainObject.wireframeOpacity /
-    (1 + detail * CONFIG.mainObject.wireframeOpacityFalloff);
+    CONFIG.mainObject.wireframeOpacity / (1 + detail * CONFIG.mainObject.wireframeOpacityFalloff);
 
   return countFaces(geometry);
 }
@@ -276,14 +270,7 @@ function createInnerGlow() {
 // Energy ring
 // --------------------------------------------------
 
-function createEnergyRing({
-  color,
-  opacity,
-  radius,
-  tube,
-  rotation,
-  scale = 1,
-}) {
+function createEnergyRing({color, opacity, radius, tube, rotation, scale = 1}) {
   const geometry = new THREE.TorusGeometry(radius, tube, 8, 128);
   const material = new THREE.MeshBasicMaterial({
     color,
@@ -307,7 +294,7 @@ function createEnergyRings() {
     rotation: [Math.PI / 2.5, 0, 0],
   });
 
-  return { ring };
+  return {ring};
 }
 
 // --------------------------------------------------
@@ -332,7 +319,7 @@ function createParticles() {
 }
 
 function createParticlePositions() {
-  const { count, minRadius, maxRadius } = CONFIG.particles;
+  const {count, minRadius, maxRadius} = CONFIG.particles;
   const positions = new Float32Array(count * 3);
 
   for (let i = 0; i < count; i++) {
@@ -354,11 +341,7 @@ function createParticlePositions() {
 // --------------------------------------------------
 
 function createLights(scene) {
-  const hemisphereLight = new THREE.HemisphereLight(
-    CONFIG.colors.hemisphereSky,
-    CONFIG.colors.hemisphereGround,
-    1.5,
-  );
+  const hemisphereLight = new THREE.HemisphereLight(CONFIG.colors.hemisphereSky, CONFIG.colors.hemisphereGround, 1.5);
   const keyLight = new THREE.DirectionalLight(0xffffff, 2.5);
 
   keyLight.position.set(3, 4, 5);
@@ -373,7 +356,7 @@ function createLights(scene) {
 
   scene.add(hemisphereLight, keyLight, cyanLight, magentaLight);
 
-  return { cyanLight, magentaLight };
+  return {cyanLight, magentaLight};
 }
 
 // --------------------------------------------------
@@ -402,7 +385,7 @@ function createGround(scene) {
 // --------------------------------------------------
 
 function animateMainObject(mainObject, elapsed) {
-  const { mesh, wireframe, glow, innerGlow } = mainObject;
+  const {mesh, wireframe, glow, innerGlow} = mainObject;
 
   mesh.rotation.x = elapsed * CONFIG.animation.coreRotationX;
   mesh.rotation.y = elapsed * CONFIG.animation.coreRotationY;
@@ -410,10 +393,7 @@ function animateMainObject(mainObject, elapsed) {
   wireframe.rotation.x = elapsed * CONFIG.animation.wireframeRotationX;
   wireframe.rotation.y = elapsed * CONFIG.animation.wireframeRotationY;
 
-  const breathing =
-    1 +
-    Math.sin(elapsed * CONFIG.animation.breathingSpeed) *
-      CONFIG.animation.breathingAmount;
+  const breathing = 1 + Math.sin(elapsed * CONFIG.animation.breathingSpeed) * CONFIG.animation.breathingAmount;
 
   mesh.scale.setScalar(breathing);
 
@@ -422,7 +402,7 @@ function animateMainObject(mainObject, elapsed) {
 }
 
 function animateRings(rings, elapsed) {
-  const { ring } = rings;
+  const {ring} = rings;
 
   ring.rotation.z = elapsed * 0.28;
   ring.rotation.y = Math.sin(elapsed * 0.55) * 0.35;
@@ -434,7 +414,7 @@ function animateParticles(particles, elapsed) {
 }
 
 function animateLights(lights, elapsed) {
-  const { cyanLight, magentaLight } = lights;
+  const {cyanLight, magentaLight} = lights;
   const cyanTime = elapsed * CONFIG.animation.cyanLightSpeed;
 
   cyanLight.position.x = Math.sin(cyanTime) * 3;

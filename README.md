@@ -6,6 +6,11 @@ A flat-shaded icosahedron sits inside a counter-rotating wireframe shell, lit by
 
 **[Open the live demo](https://stiutin.github.io/threejs-icosphere/)**
 
+<p align="center">
+  <img src=".github/screenshots/desktop.png" width="49%" alt="The icosphere at the default subdivision level" />
+  <img src=".github/screenshots/subdivided.png" width="49%" alt="The same object subdivided five times, 720 triangles" />
+</p>
+
 ## Features
 
 - Live subdivision control, rebuilding the geometry from level 0 to 5
@@ -28,6 +33,7 @@ A flat-shaded icosahedron sits inside a counter-rotating wireframe shell, lit by
 
 Vanilla JavaScript, [Three.js](https://threejs.org/), [Vite](https://vitejs.dev/), WebGL.
 No framework, no UI library, no textures: everything in the scene is generated in code.
+Tested with [Playwright](https://playwright.dev/).
 
 ## How it works
 
@@ -80,38 +86,54 @@ Every animated property is a function of elapsed time rather than an accumulatio
 
 That last property is what the reduced-motion path uses: instead of a frozen first frame, it composes the scene at a chosen timestamp and draws it once, then redraws only when the camera is dragged.
 
+## Testing
+
+| Layer      | Tool       | What it covers                                                                                |
+| ---------- | ---------- | --------------------------------------------------------------------------------------------- |
+| End-to-end | Playwright | the production build on desktop and mobile: loads without errors, controls work - 2 scenarios |
+
+WebGL output is hard to assert pixel by pixel, so the tests check behaviour instead: no uncaught errors or console messages, the canvas appears, and the controls do what they say. CI runs the suite against the exact build it deploys.
+
 ## Project structure
 
 ```
 src/
 ├── main.js          # configuration, scene factories, animation
-└── style.css        # page reset and the WebGL fallback message
+└── style.css        # page reset, the panel and the WebGL fallback message
 
-.github/workflows/
-└── deploy.yml       # quality gate, then build and deploy to GitHub Pages
+e2e/                 # Playwright smoke tests
+scripts/             # README screenshots
+.github/workflows/   # CI: lint, build, smoke tests, deploy to GitHub Pages
 ```
 
 ## Running locally
 
+Requires Node 22.22.3 or newer (see `.nvmrc`).
+
 ```bash
 git clone https://github.com/stiutin/threejs-icosphere.git
 cd threejs-icosphere
-npm install
-npm run dev
+npm ci
+npm start
 ```
 
 Other scripts:
 
 ```bash
-npm run build        # production build into dist/
-npm run preview      # serve the production build
-npm run lint         # ESLint
-npm run format       # Prettier
+npm run build          # production build into dist/
+npm run serve          # serve the production build
+npm run e2e            # build, then the Playwright smoke tests (run `npm run e2e:install` once)
+npm run screenshots    # regenerate the README screenshots
+npm run lint           # ESLint and Stylelint
+npm run format         # Prettier
+npm run check          # formatting and lint, as in CI
 ```
+
+Working on the project with an AI assistant? [`CLAUDE.md`](CLAUDE.md) has the full context.
 
 ## Deployment
 
-Pushing to `master` runs formatting and lint checks first; only if those pass does the second job build the project and publish `dist/` to GitHub Pages. Because the site is served from a sub-path, Vite is configured with `base: '/threejs-icosphere/'`.
+Pushing to `master` runs formatting and lint, then builds the site and runs the Playwright smoke tests against that build. Only when they pass is the same build published to GitHub Pages. Vite uses a relative `base`, so the files work under `/threejs-icosphere/` without any configuration.
 
 ## Roadmap
 
@@ -127,4 +149,4 @@ Released under the [MIT License](LICENSE).
 
 ## Author
 
-**Serge Tiutin** — [github.com/stiutin](https://github.com/stiutin)
+**Serge Tiutin** - [github.com/stiutin](https://github.com/stiutin)

@@ -44,7 +44,7 @@ canvas {
 }
 
 .fallback__text {
-  color: rgba(233, 228, 255, 0.72);
+  color: rgb(233 228 255 / 72%);
   font-size: 14px;
   line-height: 1.5;
   max-width: 36ch;
@@ -52,10 +52,10 @@ canvas {
 }
 
 .panel {
-  backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  background: rgba(10, 6, 24, 0.72);
-  border: 1px solid rgba(185, 167, 255, 0.16);
+  backdrop-filter: blur(16px);
+  background: rgb(10 6 24 / 72%);
+  border: 1px solid rgb(185 167 255 / 16%);
   border-radius: 14px;
   bottom: 24px;
   display: flex;
@@ -79,7 +79,7 @@ canvas {
 }
 
 .panel__label {
-  color: rgba(233, 228, 255, 0.55);
+  color: rgb(233 228 255 / 55%);
   font-size: 12px;
 }
 
@@ -105,12 +105,12 @@ canvas {
 }
 
 .panel__faces {
-  color: rgba(233, 228, 255, 0.55);
+  color: rgb(233 228 255 / 55%);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 640px) {
+@media (width <= 640px) {
   .panel {
     bottom: 12px;
     left: 12px;

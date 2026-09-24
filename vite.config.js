@@ -1,5 +1,9 @@
-import { defineConfig } from 'vite';
+import {defineConfig} from 'vite';
 
 export default defineConfig({
-  base: '/threejs-icosphere/',
+  base: './',
+  preview: {
+    port: 4175,
+    strictPort: true,
+  },
 });
